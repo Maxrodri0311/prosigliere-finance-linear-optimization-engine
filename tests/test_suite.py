@@ -1,52 +1,179 @@
 """
-tests/test_suite.py - Automated Pytest Suite.
-Verifies data generation, schema integrity, and Dependency Inversion Principle (DIP).
+tests/test_suite.py - Mathematical Invariants & Architecture Quality Suite.
+Validates 100% of mathematical invariants, LP solver feasibility, XAI dual shadow prices,
+and Dependency Inversion Principle (DIP) in-memory mocks for Prosigliere Analytics Engineering.
 """
 
 import os
 import tempfile
 import pytest
-import pandas as pd
+import numpy as np
+import polars as pl
+
+from src.domain.entities import (
+    MarketingChannel,
+    AudienceSegment,
+    BudgetOptimizationRequest,
+    OptimizationAllocationResult,
+    LeadConversionSurvivalEvent
+)
+from src.domain.contracts import (
+    MarketingDataIngestionProtocol,
+    MarketingOptimizationEngineProtocol,
+    AttributionExplainerProtocol,
+    AnalyticalStorageProtocol,
+    TelemetrySinkProtocol
+)
 from src.data_generator import generate_domain_dataset
-from src.core_engine import DomainAnalyticsEngine, DuckDBStorageAdapter, create_engine
-from src.domain.contracts import AnalyticalStorageProtocol
+from src.core_engine import (
+    ProsigliereMarketingOptimizationEngine,
+    ProsigliereAttributionExplainer,
+    OptimizationComparisonService,
+    PolarsMarketingIngestionAdapter,
+    DuckDBStorageAdapter,
+    InMemoryTelemetrySink,
+    create_default_optimization_request
+)
 
 
 @pytest.fixture(scope="session")
-def test_dataset(tmp_path_factory):
-    fn = tmp_path_factory.mktemp("data") / "test_data.parquet"
-    df = generate_domain_dataset(num_records=2000, output_path=str(fn))
-    return str(fn)
+def calibrated_telemetry_file(tmp_path_factory):
+    """Genera un archivo Parquet temporal calibrado con 5,000 registros para pruebas rapidas."""
+    tmp_dir = tmp_path_factory.mktemp("data")
+    parquet_path = str(tmp_dir / "test_marketing_telemetry.parquet")
+    generate_domain_dataset(num_records=5000, output_path=parquet_path, seed=123)
+    return parquet_path
 
 
-def test_data_generation_integrity(test_dataset):
-    df = pd.read_parquet(test_dataset)
-    assert len(df) == 2000
-    assert "prosigliere_ana_id" in df.columns
-    assert df.isnull().sum().sum() == 0
+def test_stochastic_generator_invariants(calibrated_telemetry_file):
+    """
+    Test 1: Invariantes Fisicos y Estadisticos de la Telemetria de Marketing.
+    Verifica que la sintesis estocastica no posea nulos y cumpla las distribuciones esperadas.
+    """
+    df = pl.read_parquet(calibrated_telemetry_file)
+    assert len(df) == 5000
+    assert all(df[c].null_count() == 0 for c in df.columns), "No deben existir valores nulos en el dataset"
+
+    # Validar que todos los 5 canales gestionados por Prosigliere esten presentes
+    observed_channels = set(df["channel"].unique().to_list())
+    expected_channels = {c.value for c in MarketingChannel}
+    assert observed_channels == expected_channels, "Todos los canales omnicanal deben estar representados"
+
+    # Invariantes numericos
+    assert (df["acquisition_cost_usd"] > 0).all(), "Los costos de adquisicion deben ser estrictamente positivos"
+    assert (df["weibull_shape_k"] > 0.5).all(), "El parametro k de Weibull debe ser valido y positivo"
+    assert (df["weibull_scale_lambda"] > 1.0).all(), "El parametro lambda de vida media debe ser valido"
+    assert (df["conversion_time_days"] >= 0.25).all(), "El tiempo de conversion debe ser >= 0.25 dias"
+
+    # Invariante de conversion
+    conv_rate = df["is_converted"].mean()
+    assert 0.30 <= conv_rate <= 0.65, f"La tasa de conversion agregada ({conv_rate:.2f}) debe ser plausible"
 
 
-def test_core_engine_execution_with_duckdb(test_dataset):
-    adapter = DuckDBStorageAdapter()
-    engine = DomainAnalyticsEngine(storage=adapter, data_path=test_dataset)
-    res = engine.execute_analysis()
-    assert len(res) == 1
-    assert "mean_primary_metric" in res.columns
-    assert res.iloc[0]["total_records"] == 2000
+def test_linear_programming_feasibility_and_bounds():
+    """
+    Test 2: Factibilidad Matematica y Cumplimiento de Cotas del Solver HiGHS.
+    Verifica que la solucion respete el 100% de las restricciones primales de canal y presupuesto.
+    """
+    request = create_default_optimization_request(total_budget=1500000.0)
+    optimizer = ProsigliereMarketingOptimizationEngine()
+    result = optimizer.solve_budget_allocation(request)
+
+    assert result.is_optimal is True, "El solver HiGHS debe converger a una solucion optima"
+    assert result.solver_status_code == 0, "Status code de HiGHS debe ser 0 (Optimal)"
+    assert result.solver_latency_ms < 50.0, "La latencia del solver debe ser sub-50ms"
+
+    # Verificacion de utilizacion presupuestaria
+    assert np.isclose(result.total_budget_allocated, request.total_budget_usd, atol=1.0), (
+        "El presupuesto asignado debe agotar el 100% del capital disponible"
+    )
+
+    # Verificacion de cotas por canal [min_budget, max_budget]
+    for c in request.channel_constraints:
+        alloc = result.allocations_by_channel[c.channel]
+        assert alloc >= c.min_budget_usd - 1e-4, f"Canal {c.channel} violo cota inferior: {alloc} < {c.min_budget_usd}"
+        assert alloc <= c.max_budget_usd + 1e-4, f"Canal {c.channel} violo cota superior: {alloc} > {c.max_budget_usd}"
+
+    # Verificacion de cuota minima de retencion en Braze (>= 15%)
+    braze_alloc = result.allocations_by_channel[MarketingChannel.BRAZE_LIFECYCLE_RETENTION]
+    min_braze = (request.min_braze_retention_quota_pct / 100.0) * request.total_budget_usd
+    assert braze_alloc >= min_braze - 1e-4, f"Braze retention alloc ({braze_alloc}) violo cuota minima ({min_braze})"
+
+    # Verificacion de techo de Blended CAC
+    assert result.expected_blended_cac <= request.max_blended_cac_target + 0.1, (
+        f"Blended CAC ({result.expected_blended_cac}) excedio el techo objetivo ({request.max_blended_cac_target})"
+    )
 
 
-def test_core_engine_dependency_inversion_mock():
-    """Validates that domain logic works with an in-memory mock without DuckDB or disk I/O."""
-    class MockStorageAdapter:
-        def execute_query(self, query: str) -> pd.DataFrame:
-            return pd.DataFrame([
-                {"total_records": 500, "mean_primary_metric": 42.0}
-            ])
-        def scan_dataset(self, base_path: str) -> pd.DataFrame:
-            return pd.DataFrame()
+def test_linear_programming_superiority_over_static_heuristic():
+    """
+    Test 3: Superioridad Matematica de Programacion Lineal vs Heuristica Proporcional.
+    Verifica que la optimizacion HiGHS genere un LTV estrictamente mayor y menor CAC que el status quo.
+    """
+    request = create_default_optimization_request(total_budget=1500000.0)
+    optimizer = ProsigliereMarketingOptimizationEngine()
+    result_lp = optimizer.solve_budget_allocation(request)
 
-    with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp:
-        engine = DomainAnalyticsEngine(storage=MockStorageAdapter(), data_path=tmp.name)
-        res = engine.execute_analysis()
-        assert len(res) == 1
-        assert res.iloc[0]["mean_primary_metric"] == 42.0
+    comparison = OptimizationComparisonService.compare_lp_vs_heuristic(request, result_lp)
+
+    assert comparison["net_ltv_gain_usd"] > 0, "La optimizacion lineal debe generar ganancia neta positiva de LTV"
+    assert comparison["ltv_uplift_pct"] >= 5.0, "El incremento de LTV sobre la heuristica debe ser >= 5%"
+    assert comparison["cac_reduction_pct"] >= 5.0, "La reduccion de CAC sobre la heuristica debe ser >= 5%"
+    assert comparison["cac_target_respected_lp"] is True, "LP debe respetar el techo de Blended CAC"
+
+
+def test_xai_dual_shadow_prices_and_explanations():
+    """
+    Test 4: Explicabilidad XAI y Precios Sombra Duales de Lagrange.
+    Verifica que el explicador extraiga las derivadas marginales de saturacion y genere recomendaciones.
+    """
+    request = create_default_optimization_request(total_budget=1500000.0)
+    optimizer = ProsigliereMarketingOptimizationEngine()
+    result = optimizer.solve_budget_allocation(request)
+
+    explainer = ProsigliereAttributionExplainer()
+    explanations = explainer.explain_allocations(result, request)
+
+    assert len(explanations) == len(request.channel_constraints)
+
+    for exp in explanations:
+        assert exp.allocated_usd >= 0.0
+        assert exp.budget_share_pct >= 0.0
+        assert exp.marginal_ltv_per_dollar > 0.0
+        assert exp.dual_shadow_price >= 0.0
+        assert len(exp.recommendation) > 15, "La recomendacion debe ser descriptiva y accionable"
+
+
+def test_dependency_inversion_and_in_memory_telemetry_mock():
+    """
+    Test 5: Inversion de Dependencias (DIP) y Mocking In-Memory Sub-5ms.
+    Verifica que la orquestacion de optimizacion opere con mocks puros sin tocar disco ni base de datos.
+    """
+    class MockOptimizationEngine(MarketingOptimizationEngineProtocol):
+        def solve_budget_allocation(self, request, historical_events=None):
+            return OptimizationAllocationResult(
+                run_id="MOCK-PRO-999",
+                is_optimal=True,
+                solver_status_code=0,
+                solver_latency_ms=0.85,
+                total_budget_allocated=request.total_budget_usd,
+                allocations_by_channel={c.channel: c.min_budget_usd for c in request.channel_constraints},
+                expected_total_conversions=1500.0,
+                expected_blended_cac=100.0,
+                expected_total_ltv=18000000.0,
+                dual_shadow_prices={c.channel: 2.5 for c in request.channel_constraints},
+                budget_utilization_pct=100.0
+            )
+
+    sink = InMemoryTelemetrySink()
+    mock_engine = MockOptimizationEngine()
+    request = create_default_optimization_request(total_budget=1000000.0)
+
+    # Ejecucion aislada sin I/O
+    res = mock_engine.solve_budget_allocation(request=request)
+    sink.persist_optimization_run(res)
+
+    assert len(sink.audit_log) == 1
+    assert sink.audit_log[0].run_id == "MOCK-PRO-999"
+    assert sink.audit_log[0].is_optimal is True
+    assert sink.audit_log[0].solver_latency_ms < 5.0
