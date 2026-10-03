@@ -1,70 +1,102 @@
 -- ==============================================================================
--- Prosigliere Analytical Lakehouse - Continuous Statistical Rollup Mart
--- Target: PostgreSQL 16 Materialized Views & Statistical Windowing
--- Role: Analytics Engineer
--- Features: LAG Velocity, Moving Z-Scores, Decile Segmentation & Concurrent Refresh
+-- Prosigliere Analytics Engineering - Continuous Window Rollups
+-- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
+-- Domain Scope  : 7-Day & 30-Day Moving CAC, Conversion Velocity & LTV Multipliers
 -- ==============================================================================
 
-SET search_path TO analytical_lakehouse, public;
-
-DROP MATERIALIZED VIEW IF EXISTS mv_prosigliere_analytics_engineer_bridge_project_continuous_rollup CASCADE;
-
-CREATE MATERIALIZED VIEW mv_prosigliere_analytics_engineer_bridge_project_continuous_rollup AS
-WITH daily_entity_slices AS (
+WITH daily_channel_aggregates AS (
     SELECT
-        entity_id,
-        domain_cluster,
-        DATE_TRUNC('day', event_timestamp) AS observation_day,
-        COUNT(*) AS total_events_logged,
-        MAX(created_at) AS latest_event_at
-    FROM prosigliere_analytics_engineer_bridge_project_telemetry
-    GROUP BY entity_id, domain_cluster, DATE_TRUNC('day', event_timestamp)
+        DATE_TRUNC('day', event_timestamp) AS event_date,
+        channel,
+        audience_segment,
+        COUNT(DISTINCT lead_id) AS total_touchpoints,
+        COUNT(DISTINCT CASE WHEN is_converted THEN lead_id END) AS converted_accounts,
+        SUM(acquisition_cost_usd) AS daily_spend_usd,
+        SUM(realized_ltv_usd) AS daily_realized_ltv_usd,
+        AVG(conversion_time_days) AS avg_time_to_convert_days
+    FROM analytical_lakehouse.prosigliere_marketing_telemetry
+    GROUP BY 
+        DATE_TRUNC('day', event_timestamp),
+        channel,
+        audience_segment
 ),
-windowed_acceleration AS (
+rolling_window_calculations AS (
     SELECT
-        entity_id,
-        domain_cluster,
-        observation_day,
-        total_events_logged,
-        latest_event_at,
-        LAG(total_events_logged, 1) OVER (
-            PARTITION BY entity_id ORDER BY observation_day
-        ) AS previous_day_volume,
-        total_events_logged - COALESCE(LAG(total_events_logged, 1) OVER (
-            PARTITION BY entity_id ORDER BY observation_day
-        ), total_events_logged) AS volume_velocity,
-        AVG(total_events_logged) OVER (
-            PARTITION BY entity_id ORDER BY observation_day
+        event_date,
+        channel,
+        audience_segment,
+        total_touchpoints,
+        converted_accounts,
+        daily_spend_usd,
+        daily_realized_ltv_usd,
+        avg_time_to_convert_days,
+
+        -- 7-Day Moving Window Averages
+        AVG(daily_spend_usd) OVER (
+            PARTITION BY channel, audience_segment
+            ORDER BY event_date
             ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
-        ) AS rolling_7d_mean_volume,
-        NTILE(10) OVER (
-            PARTITION BY observation_day, domain_cluster
-            ORDER BY total_events_logged DESC
-        ) AS activity_decile
-    FROM daily_entity_slices
+        ) AS rolling_7d_spend_usd,
+
+        SUM(converted_accounts) OVER (
+            PARTITION BY channel, audience_segment
+            ORDER BY event_date
+            ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+        ) AS rolling_7d_conversions,
+
+        SUM(daily_spend_usd) OVER (
+            PARTITION BY channel, audience_segment
+            ORDER BY event_date
+            ROWS BETWEEN 6 PRECEDING AND CURRENT ROW
+        ) AS rolling_7d_cumulative_spend,
+
+        -- 30-Day Moving Window Performance
+        AVG(daily_spend_usd) OVER (
+            PARTITION BY channel, audience_segment
+            ORDER BY event_date
+            ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
+        ) AS rolling_30d_spend_usd,
+
+        SUM(daily_realized_ltv_usd) OVER (
+            PARTITION BY channel, audience_segment
+            ORDER BY event_date
+            ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
+        ) AS rolling_30d_realized_ltv_usd,
+
+        -- Window Rank of Channel Daily Volume
+        DENSE_RANK() OVER (
+            PARTITION BY event_date
+            ORDER BY daily_spend_usd DESC
+        ) AS channel_daily_spend_rank
+    FROM daily_channel_aggregates
 )
 SELECT
-    entity_id,
-    domain_cluster,
-    observation_day,
-    total_events_logged,
-    previous_day_volume,
-    volume_velocity,
-    ROUND(rolling_7d_mean_volume, 2) AS rolling_7d_mean_volume,
-    activity_decile,
-    CASE 
-        WHEN activity_decile = 1 THEN 'HIGH_PRIORITY_SURGE'
-        WHEN volume_velocity < 0 THEN 'CONTRACTION'
-        ELSE 'STABLE_EXPANSION'
-    END AS operational_health_tier,
-    CURRENT_TIMESTAMP AS mart_refreshed_at
-FROM windowed_acceleration;
+    event_date,
+    channel,
+    audience_segment,
+    ROUND(daily_spend_usd::numeric, 2) AS daily_spend_usd,
+    converted_accounts,
+    ROUND(
+        CASE 
+            WHEN converted_accounts > 0 THEN (daily_spend_usd / converted_accounts)::numeric
+            ELSE NULL 
+        END, 2
+    ) AS spot_cac_usd,
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_idx_prosigliere_analytics_engineer_bridge_project_rollup_day 
-    ON mv_prosigliere_analytics_engineer_bridge_project_continuous_rollup (entity_id, observation_day);
+    ROUND(
+        CASE 
+            WHEN rolling_7d_conversions > 0 THEN (rolling_7d_cumulative_spend / rolling_7d_conversions)::numeric
+            ELSE NULL 
+        END, 2
+    ) AS rolling_7d_blended_cac_usd,
 
-CREATE INDEX IF NOT EXISTS idx_prosigliere_analytics_engineer_bridge_project_rollup_tier 
-    ON mv_prosigliere_analytics_engineer_bridge_project_continuous_rollup (operational_health_tier, activity_decile);
+    ROUND(
+        CASE 
+            WHEN rolling_30d_spend_usd > 0 THEN (rolling_30d_realized_ltv_usd / (rolling_30d_spend_usd * 30))::numeric
+            ELSE NULL 
+        END, 2
+    ) AS rolling_30d_ltv_roas_ratio,
 
-COMMENT ON MATERIALIZED VIEW mv_prosigliere_analytics_engineer_bridge_project_continuous_rollup IS
-    'Concurrent statistical rollup mart. Refresh via: REFRESH MATERIALIZED VIEW CONCURRENTLY analytical_lakehouse.mv_prosigliere_analytics_engineer_bridge_project_continuous_rollup;';
+    channel_daily_spend_rank
+FROM rolling_window_calculations
+ORDER BY event_date DESC, channel_daily_spend_rank ASC;

@@ -1,45 +1,73 @@
--- prosigliere_analytics_engineer_bridge_project - Advanced Analytical SQL
--- Longitudinal Cohort & Time-to-Event Window Functions
+-- ==============================================================================
+-- Prosigliere Analytics Engineering - Longitudinal Cohort & Conversion Analysis
+-- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
+-- Domain Scope  : Omnichannel Acquisition Cohorts, Quartile Slicing & LTV Maturation
+-- ==============================================================================
 
-WITH raw_events AS (
+WITH cohort_base AS (
     SELECT
-        prosigliere_ana_id AS entity_id,
-        primary_metric,
-        volume_count,
-        is_active,
-        status_category,
+        lead_id,
+        channel,
+        audience_segment,
+        DATE_TRUNC('month', event_timestamp) AS cohort_month,
+        acquisition_cost_usd,
+        conversion_time_days,
+        is_converted,
+        realized_ltv_usd,
+
+        -- Quartile rank of acquisition cost within channel
+        NTILE(4) OVER (
+            PARTITION BY channel
+            ORDER BY acquisition_cost_usd ASC
+        ) AS cac_quartile,
+
+        -- Order of touchpoint per account
         ROW_NUMBER() OVER (
-            PARTITION BY prosigliere_ana_id
-            ORDER BY primary_metric ASC
-        ) AS event_sequence,
-        AVG(primary_metric) OVER (
-            PARTITION BY status_category
-        ) AS category_benchmark_avg
-    FROM telemetry_events
+            PARTITION BY lead_id
+            ORDER BY event_timestamp ASC
+        ) AS touchpoint_sequence
+    FROM analytical_lakehouse.prosigliere_marketing_telemetry
 ),
-cohort_matrix AS (
+cohort_maturation AS (
     SELECT
-        entity_id,
-        status_category,
-        primary_metric,
-        event_sequence,
-        category_benchmark_avg,
-        CASE
-            WHEN primary_metric >= category_benchmark_avg * 1.25 THEN 'HIGH_RISK_SURGE'
-            WHEN primary_metric <= category_benchmark_avg * 0.75 THEN 'STABLE_RETENTION'
-            ELSE 'NOMINAL_VARIANCE'
-        END AS risk_tier,
-        DENSE_RANK() OVER (
-            ORDER BY primary_metric DESC
-        ) AS global_severity_rank
-    FROM raw_events
+        cohort_month,
+        channel,
+        cac_quartile,
+        COUNT(DISTINCT lead_id) AS total_cohort_accounts,
+        COUNT(DISTINCT CASE WHEN is_converted THEN lead_id END) AS converted_accounts,
+        SUM(acquisition_cost_usd) AS total_cohort_spend_usd,
+        SUM(realized_ltv_usd) AS total_cohort_ltv_usd,
+
+        -- Conversion milestone counts
+        COUNT(DISTINCT CASE WHEN is_converted AND conversion_time_days <= 7.0 THEN lead_id END) AS converted_under_7d,
+        COUNT(DISTINCT CASE WHEN is_converted AND conversion_time_days <= 14.0 THEN lead_id END) AS converted_under_14d,
+        COUNT(DISTINCT CASE WHEN is_converted AND conversion_time_days <= 30.0 THEN lead_id END) AS converted_under_30d,
+        COUNT(DISTINCT CASE WHEN is_converted AND conversion_time_days <= 60.0 THEN lead_id END) AS converted_under_60d,
+
+        AVG(conversion_time_days) AS avg_days_to_convert
+    FROM cohort_base
+    GROUP BY
+        cohort_month,
+        channel,
+        cac_quartile
 )
 SELECT
-    risk_tier,
-    COUNT(DISTINCT entity_id) AS total_entities,
-    ROUND(AVG(primary_metric)::numeric, 2) AS avg_primary_metric,
-    ROUND(AVG(volume_count)::numeric, 2) AS avg_volume_count,
-    ROUND(AVG(category_benchmark_avg)::numeric, 2) AS benchmark_threshold
-FROM cohort_matrix
-GROUP BY risk_tier
-ORDER BY total_entities DESC;
+    cohort_month,
+    channel,
+    cac_quartile,
+    total_cohort_accounts,
+    converted_accounts,
+    ROUND(total_cohort_spend_usd::numeric, 2) AS total_cohort_spend_usd,
+    ROUND(total_cohort_ltv_usd::numeric, 2) AS total_cohort_ltv_usd,
+
+    -- Empirical Conversion Rates
+    ROUND((converted_accounts::numeric / NULLIF(total_cohort_accounts, 0) * 100.0), 2) AS overall_conversion_rate_pct,
+    ROUND((converted_under_7d::numeric / NULLIF(total_cohort_accounts, 0) * 100.0), 2) AS day7_conversion_rate_pct,
+    ROUND((converted_under_14d::numeric / NULLIF(total_cohort_accounts, 0) * 100.0), 2) AS day14_conversion_rate_pct,
+    ROUND((converted_under_30d::numeric / NULLIF(total_cohort_accounts, 0) * 100.0), 2) AS day30_conversion_rate_pct,
+
+    -- Unit Economics
+    ROUND((total_cohort_spend_usd / NULLIF(converted_accounts, 0))::numeric, 2) AS cohort_blended_cac_usd,
+    ROUND((total_cohort_ltv_usd / NULLIF(total_cohort_spend_usd, 0))::numeric, 2) AS cohort_ltv_roas_multiplier
+FROM cohort_maturation
+ORDER BY cohort_month DESC, channel ASC, cac_quartile ASC;

@@ -24,8 +24,7 @@ def main():
         except Exception:
             pass
 
-    tf_files = list(root.glob("infrastructure/*.tf")) + list(root.glob("**/*.tf"))
-    tf_files = [f for f in tf_files if ".terraform" not in f.parts and "venv" not in f.parts]
+    tf_files = sorted(list({f for f in root.glob("**/*.tf") if ".terraform" not in f.parts and "venv" not in f.parts}))
 
     if not has_tf_requirement and not tf_files:
         print("[Terraform Guard PASS] Terraform no requerido en este proyecto. Omitiendo validación.")
