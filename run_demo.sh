@@ -1,28 +1,37 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 echo "================================================================================"
-echo "  prosigliere-finance-linear-optimization-engine"
-echo "  Automated Linux/macOS Execution & Benchmark Runner"
+echo "  PROSIGLIERE: OMNICHANNEL ATTRIBUTION AND LINEAR OPTIMIZATION ENGINE"
+echo "  Automated Execution, Mathematical Invariants and Quantitative Benchmarks"
 echo "================================================================================"
 echo ""
 
-echo "[1/4] Generating Calibrated Stochastic Telemetry..."
+echo "[1/5] Executing Production Quality and CI/CD Security Guards..."
+python scripts/validate_no_credentials.py
+python scripts/validate_no_internal_leaks.py
+python scripts/validate_sql_complexity.py
+python scripts/validate_sql_minimum_viable.py
+python scripts/validate_terraform_minimum_viable.py
+python scripts/validate_byte_budget.py
+
+echo ""
+echo "[2/5] Synthesizing Calibrated Omnichannel Marketing Dataset (50,000 observations)..."
 python src/data_generator.py --records 50000
 
 echo ""
-echo "[2/4] Executing Executive Delivery Interface..."
-python src/interface.py
+echo "[3/5] Solving HiGHS Linear Programming and Dual Shadow Prices..."
+python src/core_engine.py
 
 echo ""
-echo "[3/4] Running Automated Pytest Invariant Suite..."
+echo "[4/5] Executing Mathematical Invariants and Test Suite..."
 python -m pytest tests/ -v
 
 echo ""
-echo "[4/4] Executing Latency & Memory SLA Profiler..."
+echo "[5/5] Running Quantitative Latency and Throughput Benchmarks (30 iterations)..."
 python tests/benchmark.py
 
 echo ""
 echo "================================================================================"
-echo "  [SUCCESS] All Mathematical Invariants and Latency SLAs Verified!"
+echo "  Execution Complete: All Invariants, Security and Latency SLAs Verified!"
 echo "================================================================================"

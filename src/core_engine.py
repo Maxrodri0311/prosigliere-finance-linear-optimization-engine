@@ -296,15 +296,15 @@ class OptimizationComparisonService:
         cac_reduction_pct = ((heuristic_cac - result_lp.expected_blended_cac) / heuristic_cac) * 100.0
 
         return {
-            "lp_expected_ltv": result_lp.expected_total_ltv,
-            "heuristic_expected_ltv": np.round(heuristic_ltv, 2),
-            "net_ltv_gain_usd": np.round(result_lp.expected_total_ltv - heuristic_ltv, 2),
-            "ltv_uplift_pct": np.round(ltv_uplift_pct, 2),
-            "lp_blended_cac": result_lp.expected_blended_cac,
-            "heuristic_blended_cac": np.round(heuristic_cac, 2),
-            "cac_reduction_pct": np.round(cac_reduction_pct, 2),
-            "cac_target_respected_lp": result_lp.expected_blended_cac <= request.max_blended_cac_target,
-            "cac_target_respected_heuristic": heuristic_cac <= request.max_blended_cac_target
+            "lp_expected_ltv": float(result_lp.expected_total_ltv),
+            "heuristic_expected_ltv": float(np.round(heuristic_ltv, 2)),
+            "net_ltv_gain_usd": float(np.round(result_lp.expected_total_ltv - heuristic_ltv, 2)),
+            "ltv_uplift_pct": float(np.round(ltv_uplift_pct, 2)),
+            "lp_blended_cac": float(result_lp.expected_blended_cac),
+            "heuristic_blended_cac": float(np.round(heuristic_cac, 2)),
+            "cac_reduction_pct": float(np.round(cac_reduction_pct, 2)),
+            "cac_target_respected_lp": bool(result_lp.expected_blended_cac <= request.max_blended_cac_target),
+            "cac_target_respected_heuristic": bool(heuristic_cac <= request.max_blended_cac_target)
         }
 
 

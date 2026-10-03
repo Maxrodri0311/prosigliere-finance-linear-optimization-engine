@@ -177,3 +177,48 @@ def test_dependency_inversion_and_in_memory_telemetry_mock():
     assert sink.audit_log[0].run_id == "MOCK-PRO-999"
     assert sink.audit_log[0].is_optimal is True
     assert sink.audit_log[0].solver_latency_ms < 5.0
+
+
+def test_fastapi_rest_service_endpoints():
+    """
+    Test 6: Verificacion de Microservicio FastAPI (EXPLAINABLE_AI_INFERENCE).
+    Valida endpoints REST de health, asignacion LP, explicabilidad XAI y comparacion heuristica.
+    """
+    from fastapi.testclient import TestClient
+    from src.interface import app
+
+    client = TestClient(app)
+
+    # 1. Healthcheck
+    resp_health = client.get("/health")
+    assert resp_health.status_code == 200
+    health_data = resp_health.json()
+    assert health_data["status"] == "healthy"
+    assert health_data["solver_engine"] == "HiGHS-Primal-Dual-Simplex"
+
+    # 2. Allocation Endpoint (Default payload)
+    resp_alloc = client.post("/api/v1/optimization/allocate", json=None)
+    assert resp_alloc.status_code == 200
+    alloc_data = resp_alloc.json()
+    assert alloc_data["is_optimal"] is True
+    assert alloc_data["total_budget_allocated"] == 1500000.0
+    assert alloc_data["expected_blended_cac"] <= 180.0
+
+    # 3. Explainability Endpoint
+    resp_explain = client.post("/api/v1/attribution/explain", json=None)
+    assert resp_explain.status_code == 200
+    explain_data = resp_explain.json()
+    assert len(explain_data["explanations"]) == 5
+    assert "dual_shadow_price" in explain_data["explanations"][0]
+
+    # 4. Benchmark Comparison Endpoint
+    resp_bench = client.get("/api/v1/comparison/benchmark")
+    assert resp_bench.status_code == 200
+    bench_data = resp_bench.json()
+    assert bench_data["benchmark_summary"]["net_ltv_gain_usd"] > 0
+
+    # 5. Cohorts Aggregation Summary
+    resp_cohorts = client.get("/api/v1/cohorts/summary")
+    assert resp_cohorts.status_code == 200
+    cohorts_data = resp_cohorts.json()
+    assert len(cohorts_data) >= 5
