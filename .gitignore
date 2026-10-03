@@ -1,0 +1,42 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Environments
+.env
+*.env
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Data artifacts & local databases
+data/*.parquet
+data/*.csv
+data/lake/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+
+# Scaffolding & Control Tokens (Zero-Leaks)
+scaffolding.manifest.json
+
+# Terraform local cache & states
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
