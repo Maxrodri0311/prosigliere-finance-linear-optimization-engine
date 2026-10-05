@@ -1,6 +1,6 @@
 """
 src/data_generator.py - Calibrated Stochastic Marketing & Lifecycle Telemetry Generator.
-Physics: Omnichannel Marketing Attribution & Weibull Survival Dynamics for Prosigliere.
+Physics: Omnichannel Marketing Attribution & Weibull Survival Dynamics for Supply Chain & Analytics Engineering Practice.
 Simulates high-velocity lead interactions across Google Ads, Meta Ads, Braze, Reverse ETL,
 and TikTok Acquisition with empirical conversion and hazard physics.
 """
@@ -101,10 +101,10 @@ def generate_domain_dataset(
     seed: int = 42
 ) -> pl.DataFrame:
     """
-    Sintetiza telemetria estocastica de marketing omnicanal y retencion para Prosigliere.
+    Sintetiza telemetria estocastica de marketing omnicanal y retencion para Supply Chain & Analytics Engineering Practice.
     Aplica la fisica de supervivencia de Weibull para modelar el tiempo hasta conversion o churn.
     """
-    print(f"[*] [Data Generator] Simulating {num_records:,} calibrated omnichannel marketing lead records for Prosigliere...")
+    print(f"[*] [Data Generator] Simulating {num_records:,} calibrated omnichannel marketing lead records for Supply Chain & Analytics Engineering Practice...")
     start_time = time.perf_counter()
     rng = np.random.default_rng(seed)
 

@@ -95,7 +95,7 @@ def run_quantitative_benchmarks(iterations: int = 30, num_records: int = 10000):
         # Report & SLA Enforcement
         # ----------------------------------------------------------------------
         print("\n" + "=" * 74)
-        print("  PROSIGLIERE MARKETING LINEAR OPTIMIZATION - QUANTITATIVE BENCHMARK")
+        print("  Supply Chain & Analytics Engineering Practice MARKETING LINEAR OPTIMIZATION - QUANTITATIVE BENCHMARK")
         print("=" * 74)
         print(f"  Dataset Population       : {num_records:,} historical lead observations")
         print(f"  Profiling Iterations     : {iterations} passes")

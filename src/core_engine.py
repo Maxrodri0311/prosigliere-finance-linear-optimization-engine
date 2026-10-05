@@ -1,5 +1,5 @@
 """
-src/core_engine.py - Core Algorithmic & Optimization Engine for Prosigliere.
+src/core_engine.py - Core Algorithmic & Optimization Engine for Supply Chain & Analytics Engineering Practice.
 Implements Constrained Linear Programming (SciPy HiGHS) with Dual Shadow Price XAI.
 Strictly decoupled via Dependency Inversion Principle (DIP).
 """
@@ -102,7 +102,7 @@ class PolarsMarketingIngestionAdapter(MarketingDataIngestionProtocol):
 
 class ProsigliereMarketingOptimizationEngine(MarketingOptimizationEngineProtocol):
     """
-    Motor de Optimizacion Lineal Primal-Dual para Prosigliere Analytics Engineering.
+    Motor de Optimizacion Lineal Primal-Dual para Supply Chain & Analytics Engineering Practice Analytics Engineering.
     Maximiza el LTV Total Adquirido sujeto a:
       - Presupuesto Total Trimestral B
       - Techo Estricto de CAC Promedio Blended
@@ -344,11 +344,11 @@ def create_engine(data_path: str = "data/raw_dataset.parquet") -> DomainAnalytic
 
 
 # ============================================================================
-# 4. DEFAULT COMPOSITION ROOT FOR PROSIGLIERE OPTIMIZATION
+# 4. DEFAULT COMPOSITION ROOT FOR Supply Chain & Analytics Engineering Practice OPTIMIZATION
 # ============================================================================
 
 def create_default_optimization_request(total_budget: float = 1500000.0) -> BudgetOptimizationRequest:
-    """Genera la especificacion de presupuesto predeterminada de Prosigliere."""
+    """Genera la especificacion de presupuesto predeterminada de Supply Chain & Analytics Engineering Practice."""
     constraints = [
         ChannelBudgetConstraint(
             channel=MarketingChannel.GOOGLE_SEARCH_CORE,
@@ -416,7 +416,7 @@ if __name__ == "__main__":
     comparison = OptimizationComparisonService.compare_lp_vs_heuristic(request, result)
 
     print("\n" + "=" * 80)
-    print("  PROSIGLIERE: OMNICHANNEL MARKETING ATTRIBUTION & LINEAR OPTIMIZATION (HiGHS)")
+    print("  Supply Chain & Analytics Engineering Practice: OMNICHANNEL MARKETING ATTRIBUTION & LINEAR OPTIMIZATION (HiGHS)")
     print("=" * 80)
     print(f" Run ID                     : {result.run_id}")
     print(f" Solver Optimal             : {result.is_optimal} (Status: {result.solver_status_code})")

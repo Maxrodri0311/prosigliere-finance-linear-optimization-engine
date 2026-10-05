@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Multi-Touch Markov Attribution Model
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Multi-Touch Markov Attribution Model
 -- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
 -- Domain Scope  : State Transition Matrices, Removal Effects & Dynamic Journey Weights
 -- ==============================================================================

@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytical Lakehouse - Enterprise DDL & Partitioning Schema
+-- Supply Chain & Analytics Engineering Practice Analytical Lakehouse - Enterprise DDL & Partitioning Schema
 -- Target Engine : PostgreSQL 16 Enterprise / Amazon RDS Aurora / BigQuery Compatible
 -- Domain Scope  : Omnichannel Marketing Attribution & Customer Survival Telemetry
 -- Architecture  : Time-Series Range Partitioning, BRIN Indexing & Audit Log Triggers

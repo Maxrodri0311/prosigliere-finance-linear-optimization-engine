@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Reverse ETL Audience Activation Mart
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Reverse ETL Audience Activation Mart
 -- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
 -- Domain Scope  : Hightouch & Census Reverse ETL Payloads for Braze and Meta Ads
 -- Architecture  : RFM Value Deciles, Churn Hazard Flags & JSON Sync Serialization

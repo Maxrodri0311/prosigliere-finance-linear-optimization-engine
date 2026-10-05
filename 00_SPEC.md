@@ -1,15 +1,15 @@
-# 📐 SPECIFICATION & BLUEPRINT: Prosigliere Omnichannel Marketing Attribution & Linear Optimization Engine
+# 📐 SPECIFICATION & BLUEPRINT: Supply Chain & Analytics Engineering Practice Omnichannel Marketing Attribution & Linear Optimization Engine
 
-**Target Company:** Prosigliere | **Target Role:** Analytics Engineer  
+**Target Company:** Supply Chain & Analytics Engineering Practice | **Target Role:** Analytics Engineer  
 **Delivery Paradigm:** `DeliveryParadigm.EXPLAINABLE_AI_INFERENCE`  
 **Core Algorithm:** `AlgorithmFamily.LINEAR_PROGRAMMING` (SciPy HiGHS Primal-Dual Simplex)  
-**Repository Name:** `prosigliere-finance-linear-optimization-engine`  
+**Repository Name:** `supplychain-finance-linear-optimization-engine`  
 
 ---
 
 ## 🏛️ 1. Executive Context & The Core Business Bottleneck
 
-Prosigliere operates as an elite growth and modern data stack consultancy guiding high-scale enterprise and midmarket clients. In omnichannel marketing capital allocation ($1.5M+ quarterly budgets), growth leadership routinely faces a severe structural dilemma:
+Supply Chain & Analytics Engineering Practice operates as an elite growth and modern data stack consultancy guiding high-scale enterprise and midmarket clients. In omnichannel marketing capital allocation ($1.5M+ quarterly budgets), growth leadership routinely faces a severe structural dilemma:
 
 1. **The Static Allocation Fallacy:** Traditional media mix models rely on historical rule-of-thumb ratios or last-touch attribution. These models fail to account for non-linear diminishing returns, channel saturation thresholds, and cross-channel cohort lifetime decay.
 2. **The CAC vs. Scale Trade-Off:** Aggressive acquisition campaigns through paid search and social frequently breach blended Customer Acquisition Cost (CAC) ceilings, destroying unit economics before lifetime value (LTV) materializes.
@@ -124,7 +124,7 @@ $$h(t) = \frac{k}{\lambda} \left(\frac{t}{\lambda}\right)^{k-1}$$
 ## 🏛️ 4. Polyglot Architecture & Layer Responsibilities
 
 ```
-📁 prosigliere-finance-linear-optimization-engine
+📁 supplychain-finance-linear-optimization-engine
 ├── 📁 analytics/queries/          # Advanced SQL Telemetry & Analytical Marts (27.6% codebase)
 │   ├── 00_schema_ddl.sql         # Range-partitioned DDL, BRIN indexes, audit log
 │   ├── 01_continuous_rollup.sql  # 7-day and 30-day moving window rolling CAC

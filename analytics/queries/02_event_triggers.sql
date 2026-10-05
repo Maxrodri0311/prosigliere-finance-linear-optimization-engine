@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Anomaly Detection Event Triggers
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Anomaly Detection Event Triggers
 -- Target Engine : PostgreSQL 16 Enterprise / Aurora
 -- Domain Scope  : Real-Time Audit on Channel CAC Surges (>3x Moving Median)
 -- ==============================================================================

@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Continuous Window Rollups
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Continuous Window Rollups
 -- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
 -- Domain Scope  : 7-Day & 30-Day Moving CAC, Conversion Velocity & LTV Multipliers
 -- ==============================================================================

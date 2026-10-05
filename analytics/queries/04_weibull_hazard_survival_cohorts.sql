@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Weibull & Kaplan-Meier Survival Analysis
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Weibull & Kaplan-Meier Survival Analysis
 -- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
 -- Domain Scope  : Actuarial Survival Curves S(t), Cumulative Hazard & Risk Sets
 -- ==============================================================================

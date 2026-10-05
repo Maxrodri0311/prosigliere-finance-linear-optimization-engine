@@ -1,5 +1,5 @@
 """
-src/domain/entities.py - Pure domain models for Prosigliere Analytics Engineering.
+src/domain/entities.py - Pure domain models for Supply Chain & Analytics Engineering Practice Analytics Engineering.
 Defines business entities for marketing attribution, Weibull survival lifecycle dynamics,
 and constrained linear programming budget optimization.
 Strict Clean Architecture: Zero vendor locking or external I/O imports.
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class MarketingChannel(str, Enum):
-    """Canales de adquisicion y retencion omnicanal gestionados por Prosigliere."""
+    """Canales de adquisicion y retencion omnicanal gestionados por Supply Chain & Analytics Engineering Practice."""
     GOOGLE_SEARCH_CORE = "GOOGLE_SEARCH_CORE"
     META_PERFORMANCE_MAX = "META_PERFORMANCE_MAX"
     BRAZE_LIFECYCLE_RETENTION = "BRAZE_LIFECYCLE_RETENTION"
@@ -65,7 +65,7 @@ class ChannelBudgetConstraint(BaseModel):
 
 
 class BudgetOptimizationRequest(BaseModel):
-    """Solicitud formal de optimizacion de presupuesto para Prosigliere."""
+    """Solicitud formal de optimizacion de presupuesto para Supply Chain & Analytics Engineering Practice."""
     request_id: str = Field(..., description="UUID unico de la corrida analitica")
     total_budget_usd: float = Field(..., gt=0.0, description="Presupuesto total a distribuir en el trimestre")
     max_blended_cac_target: float = Field(..., gt=0.0, description="Techo estricto de CAC promedio Blended")

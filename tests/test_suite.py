@@ -1,7 +1,7 @@
 """
 tests/test_suite.py - Mathematical Invariants & Architecture Quality Suite.
 Validates 100% of mathematical invariants, LP solver feasibility, XAI dual shadow prices,
-and Dependency Inversion Principle (DIP) in-memory mocks for Prosigliere Analytics Engineering.
+and Dependency Inversion Principle (DIP) in-memory mocks for Supply Chain & Analytics Engineering Practice Analytics Engineering.
 """
 
 import os
@@ -54,7 +54,7 @@ def test_stochastic_generator_invariants(calibrated_telemetry_file):
     assert len(df) == 5000
     assert all(df[c].null_count() == 0 for c in df.columns), "No deben existir valores nulos en el dataset"
 
-    # Validar que todos los 5 canales gestionados por Prosigliere esten presentes
+    # Validar que todos los 5 canales gestionados por Supply Chain & Analytics Engineering Practice esten presentes
     observed_channels = set(df["channel"].unique().to_list())
     expected_channels = {c.value for c in MarketingChannel}
     assert observed_channels == expected_channels, "Todos los canales omnicanal deben estar representados"

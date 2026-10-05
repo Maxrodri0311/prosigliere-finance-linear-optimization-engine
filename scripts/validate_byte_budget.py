@@ -1,7 +1,7 @@
 """
 scripts/validate_byte_budget.py
 Simulador de GitHub Linguist y Validador de Presupuesto de Bytes.
-Para Prosigliere Analytics Engineer:
+Para Supply Chain & Analytics Engineering Practice Analytics Engineer:
   Objetivo: Python: ~50%, SQL: ~32%, HCL: ~18%
 """
 

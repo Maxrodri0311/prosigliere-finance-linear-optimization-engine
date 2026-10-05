@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Longitudinal Cohort & Conversion Analysis
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Longitudinal Cohort & Conversion Analysis
 -- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
 -- Domain Scope  : Omnichannel Acquisition Cohorts, Quartile Slicing & LTV Maturation
 -- ==============================================================================

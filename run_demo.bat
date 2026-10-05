@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ================================================================================
-echo   PROSIGLIERE: OMNICHANNEL ATTRIBUTION AND LINEAR OPTIMIZATION ENGINE
+echo   Supply Chain & Analytics Engineering Practice: OMNICHANNEL ATTRIBUTION AND LINEAR OPTIMIZATION ENGINE
 echo   Automated Execution, Mathematical Invariants and Quantitative Benchmarks
 echo ================================================================================
 echo.

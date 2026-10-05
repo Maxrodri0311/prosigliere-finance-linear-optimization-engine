@@ -1,5 +1,5 @@
 -- ==============================================================================
--- Prosigliere Analytics Engineering - Channel Efficiency & Diminishing Returns
+-- Supply Chain & Analytics Engineering Practice Analytics Engineering - Channel Efficiency & Diminishing Returns
 -- Target Engine : PostgreSQL 16 / Snowflake / BigQuery Compatible
 -- Domain Scope  : Non-Linear Saturation Frontiers, Marginal CAC & Spend Elasticity
 -- ==============================================================================

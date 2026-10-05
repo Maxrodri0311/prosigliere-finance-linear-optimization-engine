@@ -1,6 +1,6 @@
 """
 src/interface.py - Production FastAPI REST Microservice & Swagger (EXPLAINABLE_AI_INFERENCE Paradigm).
-Inference, Dual Shadow Price XAI, and Decision Support Service for Prosigliere Analytics Engineering.
+Inference, Dual Shadow Price XAI, and Decision Support Service for Supply Chain & Analytics Engineering Practice Analytics Engineering.
 Strict Clean Architecture: Decoupled via DIP, zero internal scaffolding leaks.
 """
 
@@ -35,7 +35,7 @@ from src.core_engine import (
 )
 
 app = FastAPI(
-    title="Prosigliere Omnichannel Marketing Attribution & Linear Optimization Engine",
+    title="Supply Chain & Analytics Engineering Practice Omnichannel Marketing Attribution & Linear Optimization Engine",
     description=(
         "Production-grade C-Level Decision Support API for marketing capital allocation. "
         "Leverages SciPy HiGHS primal-dual linear programming, Lagrange multiplier shadow price explainability, "
@@ -67,7 +67,7 @@ def health_check() -> Dict[str, Any]:
     """Retorna el estado operativo del microservicio y del motor matematico HiGHS."""
     return {
         "status": "healthy",
-        "service": "prosigliere-finance-linear-optimization-engine",
+        "service": "supplychain-finance-linear-optimization-engine",
         "solver_engine": "HiGHS-Primal-Dual-Simplex",
         "delivery_paradigm": "EXPLAINABLE_AI_INFERENCE",
         "memory_status": "nominal",
